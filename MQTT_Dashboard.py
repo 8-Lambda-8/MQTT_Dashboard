@@ -2,33 +2,6 @@
 import time
 
 
-
-
-##
-##
-#	Window Stuff
-##
-##
-
-from tkinter import *
-
-fenster = Tk()
-fenster.title("MQTT Dashboard")
-
-fenster.geometry("500x500")
-fenster.resizable(0,0)
-
-def buttonLight():
-	client.publish("/BOX/Light", int(not bool(relays[1])),retain=True)
-
-my_button = Button(fenster, text="Light", command=buttonLight,height = 100,width=100)
-
-
-#my_label = Label(fenster, option=value, ... )
-
-my_button.pack()
-
-
 ##
 ##
 #	MQTT Stuff
@@ -49,21 +22,16 @@ def on_message(client, userdata, message):
 	topic = str(message.topic)
 	msg = str(message.payload)[2:-1]
 	
-	
-
 	if "Socket" in topic:
-		relays[topic[-1:]] = int(msg)
-		print(topic)	
-		print(msg)
-		print(relays)
+		print("switchSocket "+topic[-1:])
+		relays[int(topic[-1:])] = int(msg)
+		
+		
 	if "Light" in topic:
+		print("switchLight")
 		relays[1] = int(msg)
-		print(topic)	
-		print(msg)
-		print(relays)
-		
-		
-		
+
+				
 def on_subscribe(topic):
 	print("subscribed to \""+topic+"\"")
 
@@ -82,9 +50,77 @@ client.loop_start()
 client.on_subscribe = on_subscribe
 
 
+def MqttToggle(topic,relayNr):
+	val = int(not bool(relays[relayNr]))
+	print()
+	print()
+	print("mqtt toggle "+topic+"  "+str(relayNr)+" "+str(val))
+	client.publish(topic, val,retain=True)
 
 
 
-fenster.mainloop()
+##
+##
+#	Window Stuff
+##
+##
+
+from tkinter import *
+#import tkFont
+
+from tkinter import font
+
+
+root = Tk()
+root.title("MQTT Dashboard")
+
+BTN_Font = font.Font(family='Helvetica', size=36, weight='bold')
+
+
+root.geometry("800x500")
+root.resizable(200,200)
+
+frame=Frame(root)
+Grid.rowconfigure(root, 0, weight=1)
+Grid.columnconfigure(root, 0, weight=1)
+frame.grid(row=0, column=0, sticky=N+S+E+W)
+grid=Frame(frame)
+grid.grid(sticky=N+S+E+W, column=0, row=7, columnspan=2)
+Grid.rowconfigure(frame, 7, weight=1)
+Grid.columnconfigure(frame, 0, weight=1)
+
+
+Light_button = Button(frame, 
+					text="Light", 
+					command=lambda: MqttToggle("/BOX/Light",1),
+					height = 50,
+					width=50,
+					bg="gray",
+					font=BTN_Font)
+
+Socket_buttons = [Button(frame, 
+					text="Socket "+str(i), 
+					command=lambda topic="/BOX/Socket/"+str(2+i),relNr=int(2+i): MqttToggle(topic,relNr),
+					height = 50,
+					width=50,
+					bg="gray",
+					font=BTN_Font) for i in range(6)]
+i = 0
+
+Light_button.grid(column=0, row=0, sticky=N+S+E+W)
+
+for y in range(2):
+	for x in range(3):
+		Socket_buttons[i].grid(column=x, row=y+1, sticky=N+S+E+W)
+		i=i+1
+
+for x in range(3):
+	Grid.columnconfigure(frame, x, weight=1)
+
+for y in range(3):
+	Grid.rowconfigure(frame, y, weight=1)
+
+
+root.mainloop()
 	
 	
