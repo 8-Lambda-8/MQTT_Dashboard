@@ -108,7 +108,7 @@ Light_button['bg']="green" if relays[1] else "red"
 for y in range(2):
 	for x in range(3):
 		Socket_buttons[i].grid(column=x, row=y+1, sticky=N+S+E+W)
-		Socket_buttons[i]['bg']="green" if relays[i] else "red"
+		Socket_buttons[i]['bg']="green" if relays[i+2] else "red"
 		i=i+1
 
 for x in range(3):
@@ -116,6 +116,12 @@ for x in range(3):
 
 for y in range(3):
 	Grid.rowconfigure(frame, y, weight=1)
+
+#Temperature Control
+temperatureFrame=Frame(frame)
+temperatureFrame.grid(sticky=N+S+E+W, column=1, row=0, columnspan=2)
+temperatureFrame['bg']="gray"
+
 
 root.mainloop()
 	
